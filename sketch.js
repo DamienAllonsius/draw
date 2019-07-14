@@ -12,6 +12,7 @@ var center_y = 2 * radius + stroke_colors - 3 * offset;
 
 var size_color = 7;
 var size_draw = 5;
+var max_size_draw = 15;
 var size_selectors = 5;
 
 var drawing_zone = [10, 10, width - 3*radius, height-100];
@@ -75,8 +76,8 @@ class Selector {
 	let RGB = [0,0,0];
 	RGB[k] = 255;
 
-	stroke(RGB);
-	strokeWeight(size_selectors);
+	noFill();
+	
 	ellipse(coord[0], coord[1], size_selectors, size_selectors);
     }
 
@@ -95,6 +96,7 @@ class Circle {
 	for (let i=0; i<3; i++){
 	    this.selectors.push(new Selector(i*2*PI/3));
 	}
+ 	this.rad_central = radius * size_draw / max_size_draw;
     }
     
     draw_contour(){
@@ -127,7 +129,8 @@ class Circle {
 	fill(this.get_RGB());
 	stroke(0,0,0);
 	strokeWeight(1);
-	ellipse(center_x, center_y, radius , radius);
+	this.rad_central = radius * size_draw / max_size_draw;
+	ellipse(center_x, center_y, this.rad_central , this.rad_central);
     }
 
     draw_all(){
@@ -156,7 +159,6 @@ function setup() {
     createCanvas(width, height);
     circle = new Circle();
     draw_background();
-
 }
 
 function draw_background(){
@@ -173,39 +175,26 @@ function draw_background(){
     text("click in the center", center_x - radius, center_y + 1.5*radius);
     text("to restart", center_x - radius / 2, center_y + 1.5 *radius + 20);
 
-    let p = createVector(center_x - 1.7 * radius / 2, center_y - 1.7 * radius + 20);
+    
+    let p = createVector(center_x - 1.2 * radius / 2, center_y - 1.7 * radius + 20);
     text("+", p.x, p.y);
-
-    let m = createVector(center_x + 1.7 * radius / 2, center_y - 1.7 * radius + 20);
+    
+    let m = createVector(center_x +  radius / 2, center_y - 1.7 * radius + 20);
     text("-", m.x, m.y);
 
-    rect((p.x + m.x)/2 - 2 , p.y - 2, (p.x + m.x)/2 + 2, p.y + 2);
+    noFill();
+    strokeWeight(2);
+    stroke(0,0,0);
+    center_p = createVector(p.x + 5, p.y - 4);
+    center_m = createVector(m.x + 2, m.y - 4);
+    radius_p_m = 15;
+    ellipse(center_p.x, center_p.y, radius_p_m, radius_p_m);
+    ellipse(center_m.x, center_m.y, radius_p_m, radius_p_m);
+
+    fill(255,255,255);
+    ellipse(center_x, center_p.y, 16,16);
 
 }
-
-    
-//     if (mouseX > center_x - (radius /4) && mouseX < center_x + (radius/4) && mouseY> center_y - (radius / 4) &&  mouseY < center_y + (radius/4)){
-// 	drawing = [];
-// 	drawing_list = [];
-//     }
-//     play = true;
-
-//     let point = createVector(mouseX, mouseY);
-//     drawing.push(point);
-    
-//     noFill();
-//     stroke(R, G, B);
-//     beginShape();
-//     for (let v of drawing) {
-// 	vertex(v.x, v.y);
-//     }
-//     endShape();
-
-//     if (drawing.length > 0) {
-// 	drawing_list.push(drawing);
-// 	drawing = []
-// 	play = false;
-//     }
     
 function pressed_in_cercle(center, radius){
     return ((mouseX - center[0])**2 + (mouseY - center[1])**2 <= radius**2)
@@ -216,14 +205,30 @@ function pressed_in_ring(center, radius_min, radius_max){
 }
 
 function mousePressed(){
-    if ( pressed_in_cercle([center_x, center_y], radius / 2)){
+    if ( pressed_in_cercle([center_x, center_y], circle.rad_central / 2)){
 	// If mouse is pressed in the center of circle
 	draw_background();
+    }
+
+    if (pressed_in_cercle([center_x, center_p.y], 8)){
+	for(let k = 0; k<3; k++){
+	    circle.selectors[k].theta = circle.selectors[k].theta_max;
+	    size_draw = max_size_draw;
+	}
+    }
+
+    if (pressed_in_cercle([center_m.x, center_m.y], radius_p_m)){
+	size_draw = max(1, size_draw - 1);
+    }
+
+    if (pressed_in_cercle([center_p.x, center_p.y], radius_p_m)){
+	size_draw = min(max_size_draw, size_draw + 1);
     }
     
     else{
 	drawing = new Drawing(circle.get_RGB());
     }
+    circle.draw_all();
 }
 
 
@@ -253,11 +258,6 @@ function draw() {
 	    
 	    circle.draw_all();
 	}
-	   	    
-	    
-    // strokeWeight(stroke_colors);
-    // draw_circle_colors();
-    // let drawings = [];
 
     }
     
